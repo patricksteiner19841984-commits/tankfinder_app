@@ -1,0 +1,50 @@
+name: Build TankFinder Web
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: Flutter installieren
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+
+      - name: Web-Unterstützung vorbereiten
+        run: flutter create --platforms web .
+
+      - name: Abhängigkeiten laden
+        run: flutter pub get
+
+      - name: Web-Version bauen
+        run: flutter build web --release
+
+      - name: Web-Dateien hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Webseite veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4
